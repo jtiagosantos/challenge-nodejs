@@ -24,6 +24,8 @@ services:
       - challenge-nodejs-network
     depends_on:
       - database
+    volumes:
+      - "./node-api:/var/www/app"
 
   database:
     image: mysql:5.7
