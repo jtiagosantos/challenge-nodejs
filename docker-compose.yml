@@ -22,10 +22,9 @@ services:
       - "3000:3000"
     networks:
       - challenge-nodejs-network
-    depends_on:
-      - database
     volumes:
       - "./node-api:/var/www/app"
+    entrypoint: dockerize -wait tcp://database:3306 -timeout 20s npm run dev
 
   database:
     image: mysql:5.7
@@ -42,6 +41,22 @@ services:
       - challenge-nodejs-network
     ports:
       - "3306:3306"
+    # https://github.com/devfullcycle/docker-healthcheck
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p$$MYSQL_ROOT_PASSWORD",
+        ]
+      interval: 5s
+      timeout: 20s
+      retries: 3
 
 networks:
   challenge-nodejs-network:
