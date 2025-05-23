@@ -5,37 +5,23 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import express from 'express';
-import mysql from 'mysql';
 import { faker } from '@faker-js/faker';
+import { createConnection } from './database/create-connection';
+import { createPeopleTable } from './database/create-people-table';
+import { insertPeople } from './database/insert-people';
+import { readPeople } from './database/read-people';
 
 const app = express();
 const port = 3000;
-const dbConfig = {
-  host: 'database',
-  user: 'root',
-  password: 'root',
-  database: 'nodedb',
-};
 
-const connection = mysql.createConnection(dbConfig);
+const connection = createConnection();
 
-const sql = `INSERT INTO people(name) values('${faker.person.fullName()}')`;
-
-connection.query(sql, (err, result) => {
-  if (err) {
-    console.error('Error inserting data: ', err);
-    return;
-  }
-  console.log('Data inserted successfully: ', result);
+createPeopleTable(connection).then(() => {
+  insertPeople(connection, { name: faker.person.fullName() });
 });
 
 app.get('/', async (_, res) => {
-  const people = (await new Promise((resolve, reject) => {
-    connection.query('SELECT * FROM people', function (error, results) {
-      if (error) reject(error);
-      resolve(results);
-    });
-  })) as Array<{ id: number; name: string }>;
+  const people = await readPeople(connection);
 
   const title = ['<h1>', 'Full Cycle Rocks!', '</h1>'].join('');
 
